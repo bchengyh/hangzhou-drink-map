@@ -1,0 +1,53 @@
+.district {
+  fill: #f1e9db;
+  fill-opacity: .72;
+  stroke: #6e594b;
+  stroke-width: 1.65;
+}
+.district:hover { fill: #eadbc4; }
+.district-label {
+  font-size: 12px;
+  font-weight: 650;
+  fill: #503a2f;
+  paint-order: stroke;
+  stroke: #fffdf8;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.heat-point { filter: url(#blur); }
+.heat-low { fill: #74d7f7; opacity: .34; }
+.heat-medium { fill: #2679ee; opacity: .42; }
+.heat-high { fill: #31239c; opacity: .56; }
+#amapBase { position: absolute; inset: 52px 0 0; display: none; }
+#amapCompare { position:absolute;top:52px;right:0;bottom:0;left:50%;display:none;border-left:2px solid #fff; }
+.amap-ready #amapBase { display: block; }
+.map-head-actions { display:flex;align-items:center;gap:12px; }
+#compareBtn { padding:5px 9px;font-size:11px; }
+.compare-mode #amapBase { right:50%; }
+.compare-mode #amapCompare { display:block; }
+.compare-label { display:none;position:absolute;z-index:20;top:64px;padding:5px 9px;border-radius:5px;background:#fffdf0dc;box-shadow:0 2px 8px #0002;font-weight:650;font-size:11px;pointer-events:none; }
+.compare-mode .compare-label { display:block; }
+.left-label { left:14px; }
+.right-label { left:calc(50% + 14px); }
+.amap-ready #map { visibility: hidden; pointer-events: none; }
+.amap-logo,.amap-copyright { opacity: .55; }
+.brand-legend { gap:13px; }
+.brand-legend span { display:flex;align-items:center;gap:2px;color:#5f5148; }
+.brand-legend i { width:12px;height:5px; }
+.luckin-scale i:nth-of-type(1) { background:#8be8f6; }
+.luckin-scale i:nth-of-type(2) { background:#2d9df0; }
+.luckin-scale i:nth-of-type(3) { background:#32168f; }
+.mixue-scale i:nth-of-type(1) { background:#ffe47a; }
+.mixue-scale i:nth-of-type(2) { background:#ff8a3d; }
+.mixue-scale i:nth-of-type(3) { background:#d71920; }
+#brandFilters .brand-row:nth-child(1) .dot { background:#2679ee; }
+#brandFilters .brand-row:nth-child(2) .dot { background:#e62f2f; }
+.calculator {
+  left: 50%;
+  right: auto;
+  width: min(620px, calc(100% - 36px));
+  transform: translateX(-50%);
+  padding: 9px 13px;
+}
+.calculator .ruler { margin: 5px 0; }
+.calculator .calc-result { gap: 18px; }
