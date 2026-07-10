@@ -1,5 +1,5 @@
 const D=['上城区','拱墅区','西湖区','滨江区','萧山区','余杭区','临平区','钱塘区'];
-const BRAND_ORDER=['瑞幸咖啡','蜜雪冰城','库迪咖啡'];
+const BRAND_ORDER=['瑞幸咖啡','蜜雪冰城','库迪咖啡','古茗','星巴克'];
 const S={districts:new Set(D),brands:new Set(),layer:'heat',mode:'radius',data:null};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function el(tag,attrs={},text=''){const n=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));n.textContent=text;return n}
@@ -18,7 +18,7 @@ function rank(sel,rows){let box=$(sel);box.innerHTML='';let max=rows[0]?.[1]||1;
 function layer(){$('#heat').style.display=S.layer==='heat'?'block':'none';$('#points').style.display=S.layer==='point'?'block':'none'}
 function tip(e,s){let t=$('#tooltip');t.innerHTML=`<b>${s.name}</b><br>${s.brand} · ${s.district}<br>${s.address||''}`;t.style.cssText=`display:block;left:${e.clientX-230}px;top:${e.clientY-70}px`}
 $$('[data-layer]').forEach(b=>b.onclick=()=>{$$('[data-layer]').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.layer=b.dataset.layer;layer()});
-$$('[data-mode]').forEach(b=>b.onclick=()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.mode=b.dataset.mode;let r=$('#ruler');if(S.mode==='radius'){r.min=5;r.max=50;r.value=20;$('#rangeMin').textContent='500m';$('#rangeMax').textContent='5km'}else{r.min=1;r.max=30;r.value=5;$('#rangeMin').textContent='1家';$('#rangeMax').textContent='30家'};updateRuler()});
+$$('[data-mode]').forEach(b=>b.onclick=()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');S.mode=b.dataset.mode;let r=$('#ruler');if(S.mode==='radius'){r.min=2;r.max=50;r.value=2;$('#rangeMin').textContent='200m';$('#rangeMax').textContent='5km'}else{r.min=1;r.max=30;r.value=5;$('#rangeMin').textContent='1家';$('#rangeMax').textContent='30家'};updateRuler()});
 function updateRuler(){let v=+$('#ruler').value;$('#rulerValue').textContent=S.mode==='radius'?(v/10).toFixed(1)+' km':v+' 家';if(S.data)render(S.data)}$('#ruler').oninput=updateRuler;
 $('#syncBtn').onclick=async()=>{let b=$('#syncBtn');b.disabled=true;b.textContent='采集中…';$('#syncState').textContent='正在调用百度地图服务';try{let r=await fetch('/api/sync',{method:'POST'}),x=await r.json();if(!r.ok)throw Error(x.detail||'同步失败');$('#syncState').textContent=`已更新 ${x.stores} 家门店`;await load()}catch(e){$('#syncState').textContent=e.message}finally{b.disabled=false;b.textContent='更新数据'}};
 async function init(){filters();let s=await fetch('/api/status').then(r=>r.json());$('#syncState').textContent=s.stores?`数据库 ${s.stores} 家门店`:s.configured?'等待首次采集':'需要配置 API 密钥';await load()}init();
