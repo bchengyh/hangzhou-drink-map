@@ -40,8 +40,15 @@
 .mixue-scale i:nth-of-type(1) { background:#ffe47a; }
 .mixue-scale i:nth-of-type(2) { background:#ff8a3d; }
 .mixue-scale i:nth-of-type(3) { background:#d71920; }
+.cotti-scale i:nth-of-type(1) { background:#b9f39a; }
+.cotti-scale i:nth-of-type(2) { background:#38c96d; }
+.cotti-scale i:nth-of-type(3) { background:#006b55; }
 #brandFilters .brand-row:nth-child(1) .dot { background:#2679ee; }
 #brandFilters .brand-row:nth-child(2) .dot { background:#e62f2f; }
+#brandFilters .brand-row:nth-child(3) .dot { background:#0a9f73; }
+#brandFilters .brand-row[data-brand="瑞幸咖啡"] .dot { background:#2679ee; }
+#brandFilters .brand-row[data-brand="蜜雪冰城"] .dot { background:#e62f2f; }
+#brandFilters .brand-row[data-brand="库迪咖啡"] .dot { background:#0a9f73; }
 .calculator {
   left: 50%;
   right: auto;
