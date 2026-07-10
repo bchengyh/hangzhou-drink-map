@@ -72,8 +72,12 @@
 .calculator .calc-result { gap: 18px; }
 .coverage-panel { display:none; }
 .coverage-active .coverage-panel { display:block; }
+.compare-only { display:none; }
+.compare-analysis .combo-only { display:none; }
+.compare-analysis .compare-only { display:block; }
 .coverage-panel .field { display:grid;grid-template-columns:72px 1fr;align-items:center;gap:8px;margin:8px 0; }
 .coverage-panel .field span { font-size:12px;color:#75675e; }
 .coverage-panel select { width:100%;border:1px solid #dccdbf;border-radius:8px;background:#fffdf8;color:#3b2a22;padding:7px 9px;font-size:12px;outline:none; }
 .microcopy { margin:8px 0 0;color:#8a7669;font-size:12px;line-height:1.55; }
 .coverage-active .brand-legend::after { content:"覆盖：浅蓝 / 重合：紫色 / 盲区：红色";font-size:11px;color:#6b5a50;margin-left:5px; }
+.compare-analysis .brand-legend::after { content:"基准独占：蓝 / 对比独占：绿 / 重合：紫 / 共同盲区：红";font-size:11px;color:#6b5a50;margin-left:5px; }
