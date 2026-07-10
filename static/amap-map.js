@@ -6,9 +6,9 @@
   if(!loaded||!window.AMap)return;
   document.querySelector('.map-panel').classList.add('amap-ready');
   const map=new AMap.Map('amapBase',{viewMode:'2D',zoom:10,center:[120.15,30.27],mapStyle:'amap://styles/whitesmoke',showLabel:true});
-  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=17,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'];
-  const brandOrder=['瑞幸咖啡','蜜雪冰城','库迪咖啡'];
-  const gradients={"瑞幸咖啡":{.10:'#b8f4fa',.35:'#62d9f4',.58:'#2d9df0',.78:'#2859d9',1:'#32168f'},"蜜雪冰城":{.10:'#fff3a6',.35:'#ffd35c',.58:'#ff963f',.78:'#ef4b32',1:'#c91424'},"库迪咖啡":{.10:'#d8f8bd',.35:'#92e36f',.58:'#38c96d',.78:'#099a72',1:'#006b55'}};
+  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=7,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'];
+  const brandOrder=['瑞幸咖啡','蜜雪冰城','库迪咖啡','古茗','星巴克'];
+  const gradients={"瑞幸咖啡":{.10:'#b8f4fa',.35:'#62d9f4',.58:'#2d9df0',.78:'#2859d9',1:'#32168f'},"蜜雪冰城":{.10:'#fff3a6',.35:'#ffd35c',.58:'#ff963f',.78:'#ef4b32',1:'#c91424'},"库迪咖啡":{.10:'#d8f8bd',.35:'#92e36f',.58:'#38c96d',.78:'#099a72',1:'#006b55'},"古茗":{.10:'#ffe3f1',.35:'#f6a5d5',.58:'#e45bb4',.78:'#bf268c',1:'#86156b'},"星巴克":{.10:'#d7ead6',.35:'#91c78d',.58:'#4d9b56',.78:'#14743a',1:'#004b2f'}};
   window.__amapDebug={map,get map2(){return map2},get compareBrands(){return compareBrands},get heatRadius(){return heatRadius}};
   function paths(raw){return String(raw||'').split('|').map(part=>part.split(';').map(p=>p.split(',').map(Number)).filter(p=>p.length===2&&!p.some(isNaN))).filter(p=>p.length>2)}
   function activeDistricts(){const names=['上城','拱墅','西湖','滨江','萧山','余杭','临平','钱塘'];return [...document.querySelectorAll('#districtFilters .chip')].filter(x=>x.classList.contains('active')).map(x=>names.includes(x.textContent)?x.textContent+'区':x.textContent)}
@@ -17,7 +17,7 @@
   function coverageBrands(){const bs=activeBrands(),type=document.querySelector('#coverageType')?.value,target=document.querySelector('#blindBrand')?.value;if(currentLayer==='coverage'&&type==='brandBlind')return [...new Set([...(bs.length?bs:brandOrder),target].filter(Boolean))];return bs}
   async function refresh(){const p=new URLSearchParams(),ds=activeDistricts(),bs=currentLayer==='coverage'?coverageBrands():activeBrands();if(ds.length)p.set('districts',ds.join(','));p.set('brands',compareMode?compareBrands[0]:(bs.length?bs.join(','):'__none__'));const data=await fetch('/api/dashboard?'+p).then(r=>r.json());draw(data)}
   function setLayer(type){if(type==='coverage'&&compareMode)stopCompare();currentLayer=type;document.body.classList.toggle('coverage-active',type==='coverage');Object.values(heatLayers).forEach(x=>type==='heat'?x.show():x.hide());Object.values(massLayers).forEach(x=>type==='point'?x.show():x.hide());coverageLayers.forEach(x=>type==='coverage'?x.show():x.hide());if(type==='coverage')drawCoverage(lastCoverageData)}
-  function radiusKm(){const r=document.querySelector('#ruler');return Math.max(.5,(+(r?.value||20))/10)}
+  function radiusKm(){const r=document.querySelector('#ruler');return Math.max(.2,(+(r?.value||2))/10)}
   function distKm(a,b){const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
   function inside(pt,poly){let x=pt[0],y=pt[1],hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){let xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi+1e-12)+xi))hit=!hit}return hit}
   function clearCoverage(){coverageLayers.forEach(p=>map.remove(p));coverageLayers=[]}
