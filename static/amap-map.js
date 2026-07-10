@@ -26,16 +26,17 @@
     clearCoverage();lastCoverageData=data;if(currentLayer!=='coverage'||!data){setCoverageStats(0,0,'覆盖分析样本');return}
     const selected=coverageBrands().filter(b=>brandOrder.includes(b)),type=document.querySelector('#coverageType')?.value||'overlap',threshold=+(document.querySelector('#overlapThreshold')?.value||2),target=document.querySelector('#blindBrand')?.value||selected[0]||brandOrder[0];
     if(!selected.length||!boundaryPaths.length){setCoverageStats(0,0,'请先选择品牌');return}
-    const all=boundaryPaths.flat(),xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),step=.012,rad=radiusKm();
+    const all=boundaryPaths.flat(),xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),rad=radiusKm(),step=Math.max(.003,Math.min(.012,rad/75)),scan=Math.max(.006,rad/111+step*1.8);
     const byBrand=Object.fromEntries(brandOrder.map(b=>[b,(data.stores||[]).filter(s=>s.brand===b&&s.lng&&s.lat)]));let total=0,matched=0;
     for(let lng=minX;lng<=maxX;lng+=step){for(let lat=minY;lat<=maxY;lat+=step){const center=[lng+step/2,lat+step/2];if(!boundaryPaths.some(poly=>inside(center,poly)))continue;total++;
-      const cover=[];for(const b of selected){const stores=byBrand[b]||[];for(const s of stores){if(Math.abs(s.lng-center[0])>.04||Math.abs(s.lat-center[1])>.04)continue;if(distKm({lng:center[0],lat:center[1]},{lng:s.lng,lat:s.lat})<=rad){cover.push(b);break}}}
-      let show=false,color='#6b42d9',opacity=.28;if(type==='overlap'){show=cover.length>0;color=cover.length>=threshold?'#6537d8':'#58aef8';opacity=cover.length>=threshold?.38:.13;matched+=cover.length>=threshold?1:0}
+      const cover=[];for(const b of selected){const stores=byBrand[b]||[];for(const s of stores){if(Math.abs(s.lng-center[0])>scan||Math.abs(s.lat-center[1])>scan)continue;if(distKm({lng:center[0],lat:center[1]},{lng:s.lng,lat:s.lat})<=rad){cover.push(b);break}}}
+      let show=false,color='#6b42d9',opacity=.28;if(type==='covered'){show=cover.length>0;color='#58aef8';opacity=.18;if(show)matched++}
+      else if(type==='overlap'){show=cover.length>=threshold;color='#6537d8';opacity=.38;if(show)matched++}
       else if(type==='blind'){show=cover.length===0;color='#df4b4b';opacity=.22;if(show)matched++}
       else {const hasTarget=cover.includes(target);show=!hasTarget;color='#df4b4b';opacity=.20;if(show)matched++}
       if(show){const path=[[lng,lat],[lng+step,lat],[lng+step,lat+step],[lng,lat+step]],p=new AMap.Polygon({path,strokeOpacity:0,fillColor:color,fillOpacity:opacity,zIndex:22,bubble:true});coverageLayers.push(p);map.add(p)}
     }}
-    const label=type==='overlap'?`重合网格 ${threshold}+`:type==='blind'?'全品牌盲区':'指定品牌盲区';setCoverageStats(matched,total,label);window.__coverageLayerCount=coverageLayers.length;
+    const label=type==='covered'?'至少 1 品牌覆盖':type==='overlap'?`多品牌重合 ${threshold}+`:type==='blind'?'共同盲区':'指定品牌盲区';setCoverageStats(matched,total,label);window.__coverageLayerCount=coverageLayers.length;
   }
   function draw(data){
     polygons.forEach(p=>map.remove(p));polygons=[];boundaryPaths=[];
