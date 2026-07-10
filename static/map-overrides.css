@@ -34,6 +34,10 @@
 .brand-legend { gap:13px; }
 .brand-legend span { display:flex;align-items:center;gap:2px;color:#5f5148; }
 .brand-legend i { width:12px;height:5px; }
+.section-title.compact { margin-bottom:8px; }
+.brand-tools { display:flex;gap:8px;margin:0 0 8px; }
+.brand-tools button { border:1px solid #d8c8b8;background:#fffdf8;border-radius:8px;padding:6px 9px;color:#6b3d25;font-size:12px;cursor:pointer; }
+.brand-tools button:hover { background:#f7efe5; }
 .luckin-scale i:nth-of-type(1) { background:#8be8f6; }
 .luckin-scale i:nth-of-type(2) { background:#2d9df0; }
 .luckin-scale i:nth-of-type(3) { background:#32168f; }
@@ -72,4 +76,4 @@
 .coverage-panel .field span { font-size:12px;color:#75675e; }
 .coverage-panel select { width:100%;border:1px solid #dccdbf;border-radius:8px;background:#fffdf8;color:#3b2a22;padding:7px 9px;font-size:12px;outline:none; }
 .microcopy { margin:8px 0 0;color:#8a7669;font-size:12px;line-height:1.55; }
-.coverage-active .brand-legend::after { content:"覆盖：浅色 / 重合：紫色 / 盲区：红色";font-size:11px;color:#6b5a50;margin-left:5px; }
+.coverage-active .brand-legend::after { content:"覆盖：浅蓝 / 重合：紫色 / 盲区：红色";font-size:11px;color:#6b5a50;margin-left:5px; }
