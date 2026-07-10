@@ -43,12 +43,20 @@
 .cotti-scale i:nth-of-type(1) { background:#b9f39a; }
 .cotti-scale i:nth-of-type(2) { background:#38c96d; }
 .cotti-scale i:nth-of-type(3) { background:#006b55; }
+.guming-scale i:nth-of-type(1) { background:#ffe3f1; }
+.guming-scale i:nth-of-type(2) { background:#e45bb4; }
+.guming-scale i:nth-of-type(3) { background:#86156b; }
+.starbucks-scale i:nth-of-type(1) { background:#d7ead6; }
+.starbucks-scale i:nth-of-type(2) { background:#4d9b56; }
+.starbucks-scale i:nth-of-type(3) { background:#004b2f; }
 #brandFilters .brand-row:nth-child(1) .dot { background:#2679ee; }
 #brandFilters .brand-row:nth-child(2) .dot { background:#e62f2f; }
 #brandFilters .brand-row:nth-child(3) .dot { background:#0a9f73; }
 #brandFilters .brand-row[data-brand="瑞幸咖啡"] .dot { background:#2679ee; }
 #brandFilters .brand-row[data-brand="蜜雪冰城"] .dot { background:#e62f2f; }
 #brandFilters .brand-row[data-brand="库迪咖啡"] .dot { background:#0a9f73; }
+#brandFilters .brand-row[data-brand="古茗"] .dot { background:#c93298; }
+#brandFilters .brand-row[data-brand="星巴克"] .dot { background:#006241; }
 .calculator {
   left: 50%;
   right: auto;
