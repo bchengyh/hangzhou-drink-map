@@ -6,12 +6,36 @@
   if(!loaded||!window.AMap)return;
   document.querySelector('.map-panel').classList.add('amap-ready');
   const map=new AMap.Map('amapBase',{viewMode:'2D',zoom:10,center:[120.15,30.27],mapStyle:'amap://styles/whitesmoke',showLabel:true});
-  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=7,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'],refreshSeq=0;
+  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],metroLayers=[],compareMetroLayers=[],lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=7,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'],refreshSeq=0;
   const brandOrder=['瑞幸咖啡','蜜雪冰城','库迪咖啡','古茗','星巴克'];
   const gradients={"瑞幸咖啡":{.10:'#b8f4fa',.35:'#62d9f4',.58:'#2d9df0',.78:'#2859d9',1:'#32168f'},"蜜雪冰城":{.10:'#fff3a6',.35:'#ffd35c',.58:'#ff963f',.78:'#ef4b32',1:'#c91424'},"库迪咖啡":{.10:'#d8f8bd',.35:'#92e36f',.58:'#38c96d',.78:'#099a72',1:'#006b55'},"古茗":{.10:'#ffe3f1',.35:'#f6a5d5',.58:'#e45bb4',.78:'#bf268c',1:'#86156b'},"星巴克":{.10:'#d7ead6',.35:'#91c78d',.58:'#4d9b56',.78:'#14743a',1:'#004b2f'}};
   const pointColors={"瑞幸咖啡":"#2679ee","蜜雪冰城":"#e62f2f","库迪咖啡":"#0a9f73","古茗":"#c93298","星巴克":"#006241"};
+  const metroLines=[
+    {name:'1号线',color:'#E51C23',label:[120.172,30.266],path:[[120.238,30.167],[120.219,30.181],[120.211,30.204],[120.205,30.229],[120.197,30.244],[120.181,30.257],[120.172,30.266],[120.159,30.274],[120.174,30.290],[120.212,30.291],[120.223,30.299],[120.269,30.313],[120.317,30.319],[120.350,30.315],[120.384,30.313],[120.415,30.309]]},
+    {name:'2号线',color:'#F28C00',label:[120.132,30.286],path:[[120.270,30.124],[120.260,30.155],[120.248,30.194],[120.239,30.220],[120.225,30.238],[120.207,30.254],[120.181,30.266],[120.164,30.270],[120.144,30.278],[120.132,30.286],[120.111,30.296],[120.091,30.309],[120.073,30.328],[120.055,30.348]]},
+    {name:'4号线',color:'#6F2DA8',label:[120.206,30.245],path:[[120.159,30.158],[120.169,30.180],[120.184,30.207],[120.197,30.231],[120.206,30.245],[120.211,30.259],[120.214,30.276],[120.224,30.292],[120.205,30.300],[120.190,30.317],[120.181,30.340],[120.176,30.360]]},
+    {name:'5号线',color:'#00A3A1',label:[120.122,30.309],path:[[119.998,30.279],[120.028,30.286],[120.061,30.296],[120.091,30.309],[120.122,30.309],[120.151,30.306],[120.174,30.290],[120.181,30.257],[120.190,30.237],[120.197,30.207],[120.205,30.182],[120.230,30.166],[120.260,30.151],[120.285,30.135]]},
+    {name:'6号线',color:'#0072BC',label:[120.240,30.218],path:[[119.966,30.048],[120.041,30.078],[120.081,30.113],[120.147,30.154],[120.190,30.181],[120.226,30.212],[120.240,30.218],[120.254,30.243],[120.269,30.275],[120.276,30.303],[120.253,30.327]]},
+    {name:'7号线',color:'#8A1538',label:[120.244,30.236],path:[[120.158,30.240],[120.185,30.244],[120.211,30.252],[120.244,30.236],[120.260,30.214],[120.286,30.190],[120.326,30.175],[120.382,30.181],[120.447,30.229]]},
+    {name:'9号线',color:'#B78500',label:[120.286,30.322],path:[[120.200,30.244],[120.219,30.259],[120.241,30.278],[120.269,30.313],[120.286,30.322],[120.323,30.361],[120.339,30.389],[120.303,30.421]]},
+    {name:'10号线',color:'#C8A2C8',label:[120.128,30.314],path:[[120.130,30.270],[120.132,30.286],[120.128,30.314],[120.127,30.334],[120.126,30.355],[120.128,30.378]]},
+    {name:'16号线',color:'#7AC143',label:[119.989,30.279],path:[[119.724,30.230],[119.806,30.245],[119.891,30.258],[119.998,30.279],[120.033,30.285]]},
+    {name:'19号线',color:'#00AEEF',label:[120.170,30.300],path:[[119.998,30.319],[120.035,30.315],[120.079,30.305],[120.124,30.301],[120.170,30.300],[120.205,30.300],[120.244,30.302],[120.292,30.284],[120.365,30.248],[120.447,30.229]]}
+  ];
   function pointIcon(color){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.5" fill="${color}" fill-opacity=".78" stroke="white" stroke-width="2"/><circle cx="9" cy="9" r="2.2" fill="white" fill-opacity=".85"/></svg>`;return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`}
-  window.__amapDebug={map,get map2(){return map2},get compareBrands(){return compareBrands},get heatRadius(){return heatRadius},get massLayerBrands(){return Object.keys(massLayers)}};
+  window.__amapDebug={map,get map2(){return map2},get compareBrands(){return compareBrands},get heatRadius(){return heatRadius},get massLayerBrands(){return Object.keys(massLayers)},get metroLayerCount(){return metroLayers.length}};
+  function metroEnabled(){return document.querySelector('#metroToggle')?.checked!==false}
+  function clearMetro(targetMap,bucket){bucket.forEach(x=>targetMap.remove(x));bucket.length=0}
+  function drawMetro(targetMap,bucket){
+    if(!targetMap)return;clearMetro(targetMap,bucket);document.body.classList.toggle('metro-on',metroEnabled());
+    if(!metroEnabled())return;
+    metroLines.forEach(line=>{
+      const halo=new AMap.Polyline({path:line.path,strokeColor:'#fffdf8',strokeWeight:7,strokeOpacity:.72,zIndex:9,bubble:true});
+      const rail=new AMap.Polyline({path:line.path,strokeColor:line.color,strokeWeight:3,strokeOpacity:.68,zIndex:10,lineJoin:'round',lineCap:'round',bubble:true});
+      const label=new AMap.Text({text:line.name,position:line.label||line.path[Math.floor(line.path.length/2)],anchor:'center',zIndex:11,style:{'background-color':'rgba(255,253,248,.86)','border':'1px solid rgba(214,201,188,.9)','border-radius':'999px','box-shadow':'0 2px 8px rgba(0,0,0,.08)','padding':'2px 6px','font-size':'10px','font-weight':'700','color':line.color}});
+      targetMap.add([halo,rail,label]);bucket.push(halo,rail,label);
+    });
+  }
   function paths(raw){return String(raw||'').split('|').map(part=>part.split(';').map(p=>p.split(',').map(Number)).filter(p=>p.length===2&&!p.some(isNaN))).filter(p=>p.length>2)}
   function activeDistricts(){const names=['上城','拱墅','西湖','滨江','萧山','余杭','临平','钱塘'];return [...document.querySelectorAll('#districtFilters .chip')].filter(x=>x.classList.contains('active')).map(x=>names.includes(x.textContent)?x.textContent+'区':x.textContent)}
   function activeBrands(){return [...document.querySelectorAll('#brandFilters input:checked')].map(x=>x.parentElement.textContent.trim())}
@@ -57,7 +81,9 @@
     if(polygons.length&&!fittedOnce){fittedOnce=true;requestAnimationFrame(()=>{map.resize();setTimeout(()=>map.setFitView(polygons,false,[42,42,145,42]),120)})}
   }
   await refresh();
+  drawMetro(map,metroLayers);
   document.addEventListener('click',e=>{if(e.target.closest('#districtFilters')||e.target.closest('#brandFilters'))setTimeout(()=>compareMode?startCompare():refresh(),250);const layer=e.target.closest('[data-layer]');if(layer)setLayer(layer.dataset.layer)});
+  document.querySelector('#metroToggle')?.addEventListener('change',()=>{drawMetro(map,metroLayers);if(map2)drawMetro(map2,compareMetroLayers)});
   const ruler=document.querySelector('#ruler');
   ruler?.addEventListener('input',()=>{if(!document.querySelector('[data-mode="radius"]')?.classList.contains('active'))return;heatRadius=Math.round(6+(+ruler.value*.55));Object.entries(heatLayers).forEach(([brand,h])=>{if(h.setOptions)h.setOptions({radius:heatRadius});h.setDataSet({data:lastPoints[brand]||[],max:6})});if(compareHeat){if(compareHeat.setOptions)compareHeat.setOptions({radius:heatRadius});compareHeat.setDataSet({data:comparePoints,max:6})}if(currentLayer==='coverage')drawCoverage(lastCoverageData);window.__amapHeatRadius=heatRadius});
   ['#coverageMode','#coverageType','#overlapThreshold','#blindBrand','#baseBrand','#compareBrand','#compareView'].forEach(sel=>document.querySelector(sel)?.addEventListener('change',()=>{updateCoverageModeUI();refresh()}));
@@ -65,12 +91,12 @@
     if(currentLayer==='coverage'){document.querySelector('[data-layer="heat"]')?.click()}
     compareBrands=pickCompareBrands();
     compareMode=true;document.querySelector('.map-panel').classList.add('compare-mode');document.querySelector('#compareBtn').textContent='退出对比';map.resize();
-    if(!map2){map2=new AMap.Map('amapCompare',{viewMode:'2D',zoom:map.getZoom(),center:map.getCenter(),mapStyle:'amap://styles/whitesmoke',showLabel:true});const sync=(a,b)=>{if(syncing||!b)return;syncing=true;b.setZoomAndCenter(a.getZoom(),a.getCenter(),true);setTimeout(()=>syncing=false,30)};map.on('moveend',()=>sync(map,map2));map.on('zoomend',()=>sync(map,map2));map2.on('moveend',()=>sync(map2,map));map2.on('zoomend',()=>sync(map2,map))}
+    if(!map2){map2=new AMap.Map('amapCompare',{viewMode:'2D',zoom:map.getZoom(),center:map.getCenter(),mapStyle:'amap://styles/whitesmoke',showLabel:true});drawMetro(map2,compareMetroLayers);const sync=(a,b)=>{if(syncing||!b)return;syncing=true;b.setZoomAndCenter(a.getZoom(),a.getCenter(),true);setTimeout(()=>syncing=false,30)};map.on('moveend',()=>sync(map,map2));map.on('zoomend',()=>sync(map,map2));map2.on('moveend',()=>sync(map2,map));map2.on('zoomend',()=>sync(map2,map))}
     document.querySelector('.left-label').textContent=compareBrands[0];document.querySelector('.right-label').textContent=compareBrands[1];
     comparePolygons.forEach(p=>map2.remove(p));comparePolygons=[];if(compareHeat){compareHeat.hide();compareHeat=null}
     const ds=activeDistricts(),p=new URLSearchParams({brands:compareBrands[1]});if(ds.length)p.set('districts',ds.join(','));const data=await fetch('/api/dashboard?'+p).then(r=>r.json());
     Object.values(data.boundaries||{}).forEach(raw=>paths(raw).forEach(path=>{const poly=new AMap.Polygon({path,strokeColor:'#b52932',strokeWeight:1.4,strokeOpacity:.75,fillColor:'#fff0d0',fillOpacity:.07,zIndex:8});comparePolygons.push(poly);map2.add(poly)}));comparePoints=(data.stores||[]).filter(s=>s.lng&&s.lat).map(s=>({lng:s.lng,lat:s.lat,count:1}));compareHeat=new AMap.HeatMap(map2,{radius:heatRadius,opacity:[.14,.88],gradient:gradients[compareBrands[1]],zooms:[8,18]});compareHeat.setDataSet({data:comparePoints,max:6});await refresh();map.resize();map2.resize();map2.setZoomAndCenter(map.getZoom(),map.getCenter(),true);window.__amapCompareLinked={left:compareBrands[0],right:compareBrands[1],zoom:map.getZoom(),zoom2:map2.getZoom()}
   }
-  function stopCompare(){compareMode=false;compareHeat=null;comparePoints=[];comparePolygons=[];document.querySelector('.map-panel').classList.remove('compare-mode');document.querySelector('#compareBtn').textContent='左右对比';if(map2){map2.destroy();map2=null;document.querySelector('#amapCompare').innerHTML=''}map.resize();refresh()}
+  function stopCompare(){compareMode=false;compareHeat=null;comparePoints=[];comparePolygons=[];compareMetroLayers=[];document.querySelector('.map-panel').classList.remove('compare-mode');document.querySelector('#compareBtn').textContent='左右对比';if(map2){map2.destroy();map2=null;document.querySelector('#amapCompare').innerHTML=''}map.resize();refresh()}
   document.querySelector('#compareBtn')?.addEventListener('click',()=>compareMode?stopCompare():startCompare());
 })();
