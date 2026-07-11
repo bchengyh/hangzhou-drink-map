@@ -6,7 +6,7 @@
   if(!loaded||!window.AMap)return;
   document.querySelector('.map-panel').classList.add('amap-ready');
   const map=new AMap.Map('amapBase',{viewMode:'2D',zoom:10,center:[120.15,30.27],mapStyle:'amap://styles/whitesmoke',showLabel:true});
-  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],metroLayers=[],compareMetroLayers=[],lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=7,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'],refreshSeq=0;
+  let heatLayers={},massLayers={},polygons=[],boundaryPaths=[],coverageLayers=[],metroLayers=[],compareMetroLayers=[],stationLayers=[],lastDashboard=null,lastCoverageData=null,comparePolygons=[],lastPoints={},heatRadius=7,currentLayer='heat',fittedOnce=false,compareMode=false,map2=null,compareHeat=null,comparePoints=[],syncing=false,compareBrands=['瑞幸咖啡','蜜雪冰城'],refreshSeq=0;
   const brandOrder=['瑞幸咖啡','蜜雪冰城','库迪咖啡','古茗','星巴克'];
   const gradients={"瑞幸咖啡":{.10:'#b8f4fa',.35:'#62d9f4',.58:'#2d9df0',.78:'#2859d9',1:'#32168f'},"蜜雪冰城":{.10:'#fff3a6',.35:'#ffd35c',.58:'#ff963f',.78:'#ef4b32',1:'#c91424'},"库迪咖啡":{.10:'#d8f8bd',.35:'#92e36f',.58:'#38c96d',.78:'#099a72',1:'#006b55'},"古茗":{.10:'#ffe3f1',.35:'#f6a5d5',.58:'#e45bb4',.78:'#bf268c',1:'#86156b'},"星巴克":{.10:'#d7ead6',.35:'#91c78d',.58:'#4d9b56',.78:'#14743a',1:'#004b2f'}};
   const pointColors={"瑞幸咖啡":"#2679ee","蜜雪冰城":"#e62f2f","库迪咖啡":"#0a9f73","古茗":"#c93298","星巴克":"#006241"};
@@ -23,8 +23,9 @@
     {name:'19号线',color:'#00AEEF',label:[120.170,30.300],path:[[119.998,30.319],[120.035,30.315],[120.079,30.305],[120.124,30.301],[120.170,30.300],[120.205,30.300],[120.244,30.302],[120.292,30.284],[120.365,30.248],[120.447,30.229]]}
   ];
   function pointIcon(color){const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.5" fill="${color}" fill-opacity=".78" stroke="white" stroke-width="2"/><circle cx="9" cy="9" r="2.2" fill="white" fill-opacity=".85"/></svg>`;return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`}
-  window.__amapDebug={map,get map2(){return map2},get compareBrands(){return compareBrands},get heatRadius(){return heatRadius},get massLayerBrands(){return Object.keys(massLayers)},get metroLayerCount(){return metroLayers.length}};
+  window.__amapDebug={map,get map2(){return map2},get compareBrands(){return compareBrands},get heatRadius(){return heatRadius},get massLayerBrands(){return Object.keys(massLayers)},get metroLayerCount(){return metroLayers.length},get stationLayerCount(){return stationLayers.length}};
   function metroEnabled(){return document.querySelector('#metroToggle')?.checked!==false}
+  function stationEnabled(){return document.querySelector('#metroStationToggle')?.checked!==false}
   function clearMetro(targetMap,bucket){bucket.forEach(x=>targetMap.remove(x));bucket.length=0}
   function drawMetro(targetMap,bucket){
     if(!targetMap)return;clearMetro(targetMap,bucket);document.body.classList.toggle('metro-on',metroEnabled());
@@ -49,6 +50,21 @@
   function inside(pt,poly){let x=pt[0],y=pt[1],hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){let xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi+1e-12)+xi))hit=!hit}return hit}
   function clearCoverage(){coverageLayers.forEach(p=>map.remove(p));coverageLayers=[]}
   function setCoverageStats(matched,total,label){window.__coverageStats={matched,total,label};const a=document.querySelector('#coverageCells'),b=document.querySelector('#coverageMeta');if(a)a.textContent=matched;if(b)b.textContent=total?`${label} · ${Math.round(matched/total*100)}%`:'覆盖分析样本'}
+  function setStationStats(covered,total,blind,rank,label){window.__stationCoverageStats={covered,total,blind,label};const a=document.querySelector('#stationCoverage'),b=document.querySelector('#stationMeta'),c=document.querySelector('#stationTotal'),m=document.querySelector('#stationBlindMeta'),box=document.querySelector('#stationBlindRank');if(c)c.textContent=total;if(a)a.textContent=covered;if(b)b.textContent=total?`${label} · 盲区 ${blind} 站`:'暂无地铁站点';if(m)m.textContent=`${radiusKm().toFixed(1)} km 半径`;if(box){box.innerHTML='';(rank||[]).slice(0,10).forEach(s=>{const r=document.createElement('div');r.className='rank-row';const line=document.createElement('div');line.className='rank-line';line.innerHTML=`<span>${s.name}</span><b>${s.district.replace('区','')}</b>`;r.append(line);box.append(r)})}}
+  function clearStations(){stationLayers.forEach(x=>map.remove(x));stationLayers=[]}
+  function drawStations(data){
+    clearStations();const stations=(data?.metro_stations||[]).filter(s=>s.lng&&s.lat),stores=(data?.stores||[]).filter(s=>s.lng&&s.lat),rad=radiusKm(),selected=activeBrands();if(!stationEnabled()){setStationStats(0,stations.length,0,[],'站点图层已关闭');return}
+    let covered=0,blindList=[];stations.forEach(st=>{
+      let nearest=null,nearestKm=Infinity,hit=false;
+      for(const store of stores){const km=distKm({lng:st.lng,lat:st.lat},{lng:store.lng,lat:store.lat});if(km<nearestKm){nearestKm=km;nearest=store}if(km<=rad)hit=true}
+      if(hit)covered++;else blindList.push(st);
+      const hasBrands=selected.length>0,color=!hasBrands?'#7d8a99':hit?'#1976d2':'#d9422f',fill=!hasBrands?'#ffffff':'#ffffff';
+      const outer=new AMap.CircleMarker({center:[st.lng,st.lat],radius:hasBrands?(hit?5:6):4,strokeColor:color,strokeWeight:2,strokeOpacity:.9,fillColor:fill,fillOpacity:.86,zIndex:95,bubble:true});
+      outer.on('click',()=>{const status=!hasBrands?'请先选择品牌':hit?'已覆盖':'站点盲区',near=nearest?`<br>最近门店：${nearest.name}（${nearestKm.toFixed(2)} km）`:'';new AMap.InfoWindow({offset:new AMap.Pixel(0,-6),content:`<div class="station-tip"><b>${st.name}</b><br>${st.district} · 地铁站<br><span class="${hit?'station-covered':'station-blind'}">${status}</span>${near}</div>`}).open(map,[st.lng,st.lat])});
+      map.add(outer);stationLayers.push(outer);
+    });
+    const label=selected.length?`已覆盖 ${covered}/${stations.length} 站`:'选择品牌后计算';setStationStats(selected.length?covered:0,stations.length,selected.length?stations.length-covered:0,selected.length?blindList:[],label);
+  }
   function drawCoverage(data){
     clearCoverage();lastCoverageData=data;if(currentLayer!=='coverage'||!data){setCoverageStats(0,0,'覆盖分析样本');return}
     const mode=document.querySelector('#coverageMode')?.value||'combo',base=document.querySelector('#baseBrand')?.value||'瑞幸咖啡',comp=document.querySelector('#compareBrand')?.value||'星巴克',view=document.querySelector('#compareView')?.value||'baseOnly',selected=(mode==='compare'?[base,comp]:coverageBrands()).filter(b=>brandOrder.includes(b)),type=document.querySelector('#coverageType')?.value||'overlap',threshold=+(document.querySelector('#overlapThreshold')?.value||2),target=document.querySelector('#blindBrand')?.value||selected[0]||brandOrder[0];
@@ -73,10 +89,12 @@
     const compareLabels={baseOnly:`${comp}补位机会区`,compareOnly:`${base}相对空白区`,both:'双方重合竞争区',neither:'双方共同盲区',quad:'四象限全显示'},label=mode==='compare'?compareLabels[view]:(type==='covered'?'至少 1 品牌覆盖':type==='overlap'?`多品牌重合 ${threshold}+`:type==='blind'?'共同盲区':'指定品牌盲区');setCoverageStats(matched,total,label);window.__coverageLayerCount=coverageLayers.length;window.__coverageMode={mode,base,compare:comp,view,label,matched,total};
   }
   function draw(data){
+    lastDashboard=data;
     polygons.forEach(p=>map.remove(p));polygons=[];boundaryPaths=[];
     Object.values(data.boundaries||{}).forEach(raw=>paths(raw).forEach(path=>{boundaryPaths.push(path);const p=new AMap.Polygon({path,strokeColor:'#245797',strokeWeight:1.5,strokeOpacity:.8,fillColor:'#d9ecff',fillOpacity:.08,zIndex:8});polygons.push(p);map.add(p)}));
     Object.values(heatLayers).forEach(x=>x.hide());Object.values(massLayers).forEach(x=>x.setMap(null));heatLayers={};massLayers={};lastPoints={};
     brandOrder.forEach((brand,index)=>{const stores=(data.stores||[]).filter(s=>s.brand===brand&&s.lng&&s.lat),pts=stores.map(s=>({lng:s.lng,lat:s.lat,count:1}));if(!pts.length)return;lastPoints[brand]=pts;const h=new AMap.HeatMap(map,{radius:heatRadius,opacity:[.14,.88],gradient:gradients[brand],zooms:[8,18]});h.setDataSet({data:pts,max:6});heatLayers[brand]=h;const m=new AMap.MassMarks(stores.map(s=>({lnglat:[s.lng,s.lat],name:s.name,address:s.address,brand:s.brand})),{zIndex:120+index,opacity:.64,zooms:[8,20],style:{url:pointIcon(pointColors[brand]||'#2679ee'),anchor:new AMap.Pixel(6,6),size:new AMap.Size(12,12)}});m.setMap(map);massLayers[brand]=m});setLayer(currentLayer);
+    drawStations(data);
     lastCoverageData=data;drawCoverage(data);
     if(polygons.length&&!fittedOnce){fittedOnce=true;requestAnimationFrame(()=>{map.resize();setTimeout(()=>map.setFitView(polygons,false,[42,42,145,42]),120)})}
   }
@@ -84,8 +102,9 @@
   drawMetro(map,metroLayers);
   document.addEventListener('click',e=>{if(e.target.closest('#districtFilters')||e.target.closest('#brandFilters'))setTimeout(()=>compareMode?startCompare():refresh(),250);const layer=e.target.closest('[data-layer]');if(layer)setLayer(layer.dataset.layer)});
   document.querySelector('#metroToggle')?.addEventListener('change',()=>{drawMetro(map,metroLayers);if(map2)drawMetro(map2,compareMetroLayers)});
+  document.querySelector('#metroStationToggle')?.addEventListener('change',()=>drawStations(lastDashboard));
   const ruler=document.querySelector('#ruler');
-  ruler?.addEventListener('input',()=>{if(!document.querySelector('[data-mode="radius"]')?.classList.contains('active'))return;heatRadius=Math.round(6+(+ruler.value*.55));Object.entries(heatLayers).forEach(([brand,h])=>{if(h.setOptions)h.setOptions({radius:heatRadius});h.setDataSet({data:lastPoints[brand]||[],max:6})});if(compareHeat){if(compareHeat.setOptions)compareHeat.setOptions({radius:heatRadius});compareHeat.setDataSet({data:comparePoints,max:6})}if(currentLayer==='coverage')drawCoverage(lastCoverageData);window.__amapHeatRadius=heatRadius});
+  ruler?.addEventListener('input',()=>{if(!document.querySelector('[data-mode="radius"]')?.classList.contains('active'))return;heatRadius=Math.round(6+(+ruler.value*.55));Object.entries(heatLayers).forEach(([brand,h])=>{if(h.setOptions)h.setOptions({radius:heatRadius});h.setDataSet({data:lastPoints[brand]||[],max:6})});if(compareHeat){if(compareHeat.setOptions)compareHeat.setOptions({radius:heatRadius});compareHeat.setDataSet({data:comparePoints,max:6})}drawStations(lastDashboard);if(currentLayer==='coverage')drawCoverage(lastCoverageData);window.__amapHeatRadius=heatRadius});
   ['#coverageMode','#coverageType','#overlapThreshold','#blindBrand','#baseBrand','#compareBrand','#compareView'].forEach(sel=>document.querySelector(sel)?.addEventListener('change',()=>{updateCoverageModeUI();refresh()}));
   async function startCompare(){
     if(currentLayer==='coverage'){document.querySelector('[data-layer="heat"]')?.click()}
